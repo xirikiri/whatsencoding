@@ -1,9 +1,9 @@
 #!/bin/bash
 #Bogatyrev Ilya
 #ilia.bogatyrev@gmail.com
-#Проверяем, есть ли параметр(файл)
-#Если есть, присваиваем имя файла, переменной
-#Если нет, то считаем файл со стандартного потока ввода
+#Проверяю, есть ли параметр(файл)
+#Если есть, присваиваю имя файла переменной
+#Если нет, то считаю файл со стандартного потока ввода
 #Необходимо доработать ввод со стандартного потока(6-14 строки)
 if [ $# -eq 1 ]
 then
@@ -16,38 +16,19 @@ fi
 echo "$1"
 #Создаю директорию для временных файлов
 #Вывожу файл в битовом представлении по октетам
-xxd -b $1 1>xxdoutput
-
-#Фильтрую вывод xxd - убираю заголовки строк и окончания, только октеты в строках оставляю
-cat xxdoutput |
+xxd -b $1 |
+#Фильтрую вывод xxd - убираю адресные сдвиги и окончания, только октеты в строках оставляю
 sed 's/^.\{10\}//g' |
-sed 's/.\{8\}$//g' >> xxdMultStrings
-#Удаляем временные файлы
-rm xxdoutput
-echo "xxdMultStrings:"
-cat xxdMultStrings
-echo "grepped:"
-#grep элементов подходящих под регулярку по октету в строке сохраняем во временный файл OctetInMultStrings
-cat xxdMultStrings |
+sed 's/.\{8\}$//g' |
+#grep элементов подходящих под регулярку по октету в строке сохраняю во временный файл OctetInMultStrings
 grep -o '[0-1]\{8\}' >> octetsInMultStrings
-rm xxdMultStrings
-
-#Файл с октетами в одну линию
+#Пробегаю по строкам файла, отправляю все в файл без переноса на новую строку
+#Формируется файл с октетами в одну линию
 while read octet
 do
   echo -n "$octet " 1>>oneLineFile
 done < octetsInMultStrings
 rm octetsInMultStrings
-#Удаляю временные файлы
-echo "oneLineFile:"
+echo "octetsInOneLine:"
 cat oneLineFile
-
-
-
-#echo "$xxdMultStrings";
-
-#Ниже мусор
-#currentDir=$(pwd);
-#echo $currentDir;
-#bitview=$(xxd -b $currentDir/$1);
-#echo "$hexview";
+echo
