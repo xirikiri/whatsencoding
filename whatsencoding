@@ -1,4 +1,6 @@
 #!/bin/bash
+#Bogatyrev Ilya
+#ilia.bogatyrev@gmail.com
 #Проверяем, есть ли параметр(файл)
 #Если есть, присваиваем имя файла, переменной
 #Если нет, то считаем файл со стандартного потока ввода
@@ -12,14 +14,37 @@ echo "exit"
 exit
 fi
 echo "$1"
-
-#Выводим файл в битовом представлении по октетам
+#Создаю директорию для временных файлов
+#Вывожу файл в битовом представлении по октетам
 xxd -b $1 1>xxdoutput
 
-#Фильтруем вывод xxd - убираем заголовки строк и окончания, только октеты в строках оставляем
-xxd -b $1 |
+#Фильтрую вывод xxd - убираю заголовки строк и окончания, только октеты в строках оставляю
+cat xxdoutput |
 sed 's/^.\{10\}//g' |
-sed 's/.\{8\}$//g' 1>xxdfiltered
+sed 's/.\{8\}$//g' >> xxdMultStrings
+#Удаляем временные файлы
+rm xxdoutput
+echo "xxdMultStrings:"
+cat xxdMultStrings
+echo "grepped:"
+#grep элементов подходящих под регулярку по октету в строке сохраняем во временный файл OctetInMultStrings
+cat xxdMultStrings |
+grep -o '[0-1]\{8\}' >> octetsInMultStrings
+rm xxdMultStrings
+
+#Файл с октетами в одну линию
+while read octet
+do
+  echo -n "$octet " 1>>oneLineFile
+done < octetsInMultStrings
+rm octetsInMultStrings
+#Удаляю временные файлы
+echo "oneLineFile:"
+cat oneLineFile
+
+
+
+#echo "$xxdMultStrings";
 
 #Ниже мусор
 #currentDir=$(pwd);
