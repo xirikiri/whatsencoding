@@ -1,3 +1,58 @@
 #!/bin/bash
-#comments
-whoami
+#Bogatyrev Ilya
+#ilia.bogatyrev@gmail.com
+#Проверяю, есть ли параметр(файл)
+#Если есть, присваиваю имя файла переменной
+#Если нет, то считаю файл со стандартного потока ввода
+#Необходимо доработать ввод со стандартного потока(6-14 строки)
+if [ $# -eq 1 ]
+then
+file=$1
+else
+echo "incorrect parameter"
+echo "exit"
+exit
+fi
+#Создаю директорию для временных файлов
+#Вывожу файл в битовом представлении по октетам
+xxd -b $1 |
+#Фильтрую вывод xxd - убираю адресные сдвиги и окончания, только октеты в строках оставляю
+sed 's/^.\{10\}//g' |
+sed 's/.\{8\}$//g' |
+#grep элементов подходящих под регулярку по октету в строке сохраняю во временный файл OctetInMultStrings
+grep -o '[0-1]\{8\}' >> octetsInMultStrings
+#Пробегаю по строкам файла, отправляю все в файл без переноса на новую строку
+#Формируется файл с октетами в одну линию
+while read octet
+do
+  echo -n "$octet " 1>>oneLineFile
+done < octetsInMultStrings
+#Добавляю перенос строки в конец(костыль)
+echo 1>>oneLineFile
+rm octetsInMultStrings
+#Определение регулярных выражений
+utf8="^(0[0-1]{7}\s|110[0-1]{5}\s10[0-1]{6}\s|1110[0-1]{4}\s10[0-1]{6}\s10[0-1]{6}\s|11110[0-1]{3}\s10[0-1]{6}\s10[0-1]{6}\s10[0-1]{6}\s)*$"
+utf32le="^11111111\s11111110\s00000000\s00000000\s([0-1]{8}\s[0-1]{8}\s(0000[0-1]{4}|00010000)\s00000000\s)*$"
+utf32="^(00000000\s(0000[0-1]{4}|00010000)\s[0-1]{8}\s[0-1]{8}\s)*$"
+#utf16 be le додумать
+#utf16be=""
+#utf16le=""
+utf7="^(0[0-1]{7}\s)*$"
+cp1251="^([0-1]{8}\s)*$"
+#koi8rold="^(001[0-1]{5}|01[0-1]{6}|1[0-1]{7})*$"
+koi8r="^([0-1]{8}\s)*$"
+
+#Тестовая проверка
+for code in utf8 utf32 utf32le utf7 cp1251 koi8r
+do
+  eval a=\$$code
+  cat oneLineFile|
+  grep -E -o "$a" 1>>tempfile
+  temp=$(diff -s tempfile oneLineFile)
+  if [ "$temp" = "Files tempfile and oneLineFile are identical" ];
+  then
+    echo "$code"
+  fi
+  rm tempfile
+done
+rm oneLineFile
