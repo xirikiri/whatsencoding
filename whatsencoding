@@ -42,7 +42,9 @@ cp1251="^([0-1]{8}\s)*$"
 #koi8rold="^(001[0-1]{5}|01[0-1]{6}|1[0-1]{7})*$"
 koi8r="^([0-1]{8}\s)*$"
 
-#Тестовая проверка
+#Вывод возможных кодировок
+echo "Possible Encodings:"
+echo "--------------------------------------"
 for code in utf8 utf32 utf32le utf7 cp1251 koi8r
 do
   eval a=\$$code
@@ -56,3 +58,4 @@ do
   rm tempfile
 done
 rm oneLineFile
+echo "--------------------------------------"
